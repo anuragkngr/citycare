@@ -1,0 +1,93 @@
+Dockerfile for Patient Record Update Microservice:
+dockerfile
+   FROM openjdk:11-jre-slim
+   VOLUME /tmp
+   COPY target/patient-record-update-service.jar app.jar
+   ENTRYPOINT ["java","-jar","/app.jar"]
+
+Dockerfile for Billing Microservice:
+dockerfile
+   FROM openjdk:11-jre-slim
+   VOLUME /tmp
+   COPY target/billing-service.jar app.jar
+   ENTRYPOINT ["java","-jar","/app.jar"]
+
+Dockerfile for Insurance Microservice:
+dockerfile
+   FROM openjdk:11-jre-slim
+   VOLUME /tmp
+   COPY target/insurance-service.jar app.jar
+   ENTRYPOINT ["java","-jar","/app.jar"]
+
+Docker Compose
+Create a docker-compose.yml file to orchestrate the deployment of all microservices along with Kafka and Zookeeper.
+yaml
+version: '3.8'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper:3.4.6
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka:2.12-2.2.1
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+  patient-record-update-service:
+    build: ./patient-record-update-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  billing-service:
+    build: ./billing-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    version: '3.8'
+    services:
+      prometheus:
+        image: prom/prometheus
+        volumes:
+          - ./prometheus.yml:/etc/prometheus/prometheus.yml
+        ports:
+          - "9090:9090"
+      grafana:
+        image: grafana/grafana
+        ports:
+          - "3000:3000"
+        environment:
+          - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  insurance-service:
+    build: ./insurance-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+Monitoring
+Prometheus and Grafana
+Prometheus Configuration:
+Create a prometheus.yml file:
+yaml
+     global:
+       scrape_interval: 15s
+
+     scrape_configs:
+       - job_name: 'spring-boot'
+         metrics_path: '/actuator/prometheus'
+         static_configs:
+           - targets: ['patient-record-update-service:8081', 'billing-service:8082', 'insurance-service:8083']
+
+
+

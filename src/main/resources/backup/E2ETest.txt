@@ -1,0 +1,48 @@
+//package com.citycare;
+//
+//import io.restassured.RestAssured;
+//import io.restassured.response.Response;
+//import org.junit.jupiter.api.BeforeAll;
+//import org.junit.jupiter.api.Test;
+//
+//import static io.restassured.RestAssured.given;
+//import static org.assertj.core.api.Assertions.assertThat;
+//import static org.hamcrest.Matchers.equalTo;
+//import static org.junit.jupiter.api.Assertions.assertNotEquals;
+//
+//public class E2ETest {
+//    @BeforeAll
+//    public static void setup() {
+//        RestAssured.baseURI = "http://localhost";
+//        RestAssured.port = 8081; // Patient Record Update Service port
+//    }
+//
+//    @Test
+//    void testCreateAndRetrievePatientRecord() {
+//        // Create a new patient record
+//        String requestBody = "{ 'name': 'Anurag Mishra', 'medicalHistory': 'None' }";
+//        assertThat(requestBody).isNotNull();
+//        assertNotEquals(null, requestBody);
+//
+//        Response response = given()
+//                .header("Content-Type", "application/json")
+//                .body(requestBody)
+//                .when()
+//                .post("/api/patient-records")
+//                .then()
+//                .statusCode(200)
+//                .body("name", equalTo("Anurag Mishra"))
+//                .extract()
+//                .response();
+//
+//        Long recordId = response.jsonPath().getLong("id");
+//
+//        // Retrieve the created patient record
+//        given()
+//                .when()
+//                .get("/api/patient-records/" + recordId)
+//                .then()
+//                .statusCode(200)
+//                .body("name", equalTo("Anurag Mishra"));
+//    }
+//}
